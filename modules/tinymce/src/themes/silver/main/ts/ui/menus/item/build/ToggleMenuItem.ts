@@ -15,7 +15,12 @@ import { renderCheckmark } from '../structure/ItemSlices';
 import { renderItemStructure } from '../structure/ItemStructure';
 import { buildData, renderCommonItem } from './CommonMenuItem';
 
-const renderToggleMenuItem = (spec: Menu.ToggleMenuItem, itemResponse: ItemResponse, providersBackstage: UiFactoryBackstageProviders, renderIcons: boolean = true): ItemTypes.ItemSpec => {
+const renderToggleMenuItem = (
+  spec: Menu.ToggleMenuItem,
+  itemResponse: ItemResponse,
+  providersBackstage: UiFactoryBackstageProviders,
+  renderIcons: boolean = true
+): ItemTypes.ItemSpec => {
   const getApi = (component): Menu.ToggleMenuItemInstanceApi => ({
     setActive: (state) => {
       Toggling.set(component, state);

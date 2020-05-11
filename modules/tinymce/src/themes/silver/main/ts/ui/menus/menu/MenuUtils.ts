@@ -8,8 +8,8 @@ import { components as menuComponents, dom as menuDom } from './MenuParts';
 import { forCollection, forHorizontalCollection, forSwatch, forToolbar } from './MenuStructures';
 import { SingleMenuItemApi } from './SingleMenuTypes';
 
-export const hasIcon = (item) => item.icon !== undefined || item.type === 'togglemenuitem' || item.type === 'choicemenuitem';
-export const menuHasIcons = (xs: SingleMenuItemApi[]) => Arr.exists(xs, hasIcon);
+export const hasIcon = (item) => item.icon !== undefined;
+export const menuHasIcons = <T>(xs: Array<SingleMenuItemApi | T>) => Arr.exists(xs, hasIcon);
 
 export interface PartialMenuSpec {
   value: string;
