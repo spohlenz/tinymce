@@ -15,11 +15,12 @@ import { FormatAttrOrStyleValue, FormatVars, RemoveFormatPartial } from '../api/
 import * as Settings from '../api/Settings';
 import Tools from '../api/util/Tools';
 import * as Bookmarks from '../bookmark/Bookmarks';
-import * as GetBookmark from '../bookmark/GetBookmark';
 import * as NodeType from '../dom/NodeType';
 import { RangeLikeObject } from '../selection/RangeTypes';
 import * as RangeWalk from '../selection/RangeWalk';
+import * as SelectionUtils from '../selection/SelectionUtils';
 import * as SplitRange from '../selection/SplitRange';
+import * as TableCellSelection from '../selection/TableCellSelection';
 import * as CaretFormat from './CaretFormat';
 import * as ExpandRange from './ExpandRange';
 import * as FormatUtils from './FormatUtils';
@@ -210,16 +211,11 @@ const removeFormat = (ed: Editor, format: RemoveFormatPartial, vars?: FormatVars
   // Applies to styling elements like strong, em, i, u, etc. so that if they have styling attributes, the attributes can be kept but the styling element is removed
   if (format.inline && format.remove === 'all' && Type.isArray(format.preserve_attributes)) {
     // Remove all attributes except for the attributes specified in preserve_attributes
-    Arr.each(dom.getAttribs(elm), (attr) => {
-      if (attr) {
-        const attrName = attr.nodeName.toLowerCase();
-        if (!Arr.exists(format.preserve_attributes, (pAttr) => pAttr === attrName)) {
-          dom.setAttrib(elm, attrName, '');
-        }
-      }
-    });
+    const attrsToPreserve = Arr.filter(dom.getAttribs(elm), (attr) => Arr.contains(format.preserve_attributes, attr.name.toLowerCase()));
+    dom.removeAllAttribs(elm);
+    Arr.each(attrsToPreserve, (attr) => dom.setAttrib(elm, attr.name, attr.value));
     // Note: If there are no attributes left, the element will be removed as normal at the end of the function
-    if (dom.getAttribs(elm).length > 0) {
+    if (attrsToPreserve.length > 0) {
       // Convert inline element to span if necessary
       ed.dom.rename(node, 'span');
       return true;
@@ -596,10 +592,11 @@ const remove = (ed: Editor, name: string, vars?: FormatVars, node?: Node | Range
     return;
   }
 
-  if (!selection.isCollapsed() || !format.inline || dom.select('td[data-mce-selected],th[data-mce-selected]').length) {
-    const bookmark = GetBookmark.getPersistentBookmark(ed.selection, true);
-    removeRngStyle(selection.getRng());
-    selection.moveToBookmark(bookmark);
+  if (!selection.isCollapsed() || !format.inline || TableCellSelection.getCellsFromEditor(ed).length) {
+    // Remove formatting on the selection
+    SelectionUtils.preserve(selection, true, () => {
+      SelectionUtils.runOnRanges(ed, removeRngStyle);
+    });
 
     // Check if start element still has formatting then we are at: "<b>text|</b>text"
     // and need to move the start into the next text node
