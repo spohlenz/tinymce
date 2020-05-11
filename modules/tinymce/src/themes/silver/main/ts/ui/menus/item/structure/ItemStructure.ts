@@ -121,7 +121,7 @@ const renderNormalItemStructure = (info: NormalItemSpec, icon: Option<string>, r
       content,
       info.shortcutContent.map(renderShortcut),
       checkmark,
-      info.caret,
+      info.caret
     ]
   };
   return menuItem;
